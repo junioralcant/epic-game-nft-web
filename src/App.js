@@ -1,6 +1,15 @@
 import React, { useEffect, useState } from 'react';
+import { ethers } from 'ethers';
+
+import myEpicNft from './utils/MyEpicGame.json';
+
 import twitterLogo from './assets/twitter-logo.svg';
 import './App.css';
+import SelectCharacter from './Components/SelectCharacter';
+import {
+  CONTRACT_ADDRESS,
+  transformCharacterData,
+} from './constants';
 
 // Constants
 const TWITTER_HANDLE = 'jrrmarques';
@@ -8,6 +17,7 @@ const TWITTER_LINK = `https://www.instagram.com/jrrmarques/`;
 
 function App() {
   const [currentAccount, setCurrentAccount] = useState(null);
+  const [characterNFT, setCharacterNFT] = useState(null);
 
   async function checkIfWalletIsConnected() {
     try {
@@ -36,6 +46,80 @@ function App() {
     }
   }
 
+  async function checkNetwork() {
+    const { ethereum } = window;
+
+    let chainId = await ethereum.request({
+      method: 'eth_chainId',
+    });
+
+    try {
+      if (chainId !== '0x4') {
+        alert('Please connect to Rinkeby!');
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  useEffect(() => {
+    checkNetwork();
+    checkIfWalletIsConnected();
+  }, []);
+
+  useEffect(() => {
+    async function fetchNFTMetadata() {
+      const { ethereum } = window;
+
+      console.log(
+        'Verificando pelo personagem NFT no endereço:',
+        currentAccount
+      );
+
+      const provider = new ethers.providers.Web3Provider(ethereum);
+      const signer = provider.getSigner();
+      const gameContract = new ethers.Contract(
+        CONTRACT_ADDRESS,
+        myEpicNft.abi,
+        signer
+      );
+
+      const txn = await gameContract.checkIfUserHasNFT();
+      if (txn.name) {
+        console.log('Usuário tem um personagem NFT');
+        setCharacterNFT(transformCharacterData(txn));
+      } else {
+        console.log('Nenhum personagem NFT foi encontrado');
+      }
+    }
+
+    if (currentAccount) {
+      console.log('Conta Atual:', currentAccount);
+      fetchNFTMetadata();
+    }
+  }, [currentAccount]);
+
+  function renderContent() {
+    if (!currentAccount) {
+      return (
+        <div className="connect-wallet-container">
+          <img
+            src="https://images-workbench.99static.com/b43P1rJfphvIeGWzzUI25Me0qeQ=/0x35:1044x1079/fit-in/500x500/filters:fill(white,true):format(jpeg)/99designs-work-samples/work-sample-designs/1324418/dd4eade4-f274-42fd-9f86-0ef2c60b4f46"
+            alt="Foguetinho Gif"
+          />
+          <button
+            className="cta-button connect-wallet-button"
+            onClick={connectWalletAction}
+          >
+            Conecte sua carteira para começar
+          </button>
+        </div>
+      );
+    } else if (currentAccount && !characterNFT) {
+      return <SelectCharacter setCharacterNFT={setCharacterNFT} />;
+    }
+  }
+
   async function connectWalletAction() {
     try {
       console.log('Teste');
@@ -60,10 +144,6 @@ function App() {
     }
   }
 
-  useEffect(() => {
-    checkIfWalletIsConnected();
-  }, []);
-
   return (
     <div className="App">
       <div className="container">
@@ -75,16 +155,7 @@ function App() {
             Junte-se a mim para vencer os inimigos do Metaverso!
           </p>
           <div className="connect-wallet-container">
-            <img
-              src="https://images-workbench.99static.com/b43P1rJfphvIeGWzzUI25Me0qeQ=/0x35:1044x1079/fit-in/500x500/filters:fill(white,true):format(jpeg)/99designs-work-samples/work-sample-designs/1324418/dd4eade4-f274-42fd-9f86-0ef2c60b4f46"
-              alt="Foguetinho Gif"
-            />
-            <button
-              className="cta-button connect-wallet-button"
-              onClick={connectWalletAction}
-            >
-              Conecte sua carteira para começar
-            </button>
+            {renderContent()}
           </div>
         </div>
         <div className="footer-container">
