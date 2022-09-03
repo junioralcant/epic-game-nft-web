@@ -1,7 +1,7 @@
 import React from 'react';
 import './LoadingIndicator.css';
 
-const LoadingIndicator = () => {
+function LoadingIndicator() {
   return (
     <div className="lds-ring">
       <div></div>
@@ -10,6 +10,6 @@ const LoadingIndicator = () => {
       <div></div>
     </div>
   );
-};
+}
 
 export default LoadingIndicator;

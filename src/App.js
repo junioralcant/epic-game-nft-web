@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
+import Arena from './Components/Arena';
+import SelectCharacter from './Components/SelectCharacter';
+import LoadingIndicator from './Components/LoadingIndicator';
 
 import myEpicNft from './utils/MyEpicGame.json';
 
 import twitterLogo from './assets/twitter-logo.svg';
 import './App.css';
-import SelectCharacter from './Components/SelectCharacter';
+
 import {
   CONTRACT_ADDRESS,
   transformCharacterData,
@@ -19,12 +22,15 @@ function App() {
   const [currentAccount, setCurrentAccount] = useState(null);
   const [characterNFT, setCharacterNFT] = useState(null);
 
+  const [isLoading, setIsLoading] = useState(false);
+
   async function checkIfWalletIsConnected() {
     try {
       const { ethereum } = window;
 
       if (!ethereum) {
         console.log('Eu acho que você não tem a metamask!');
+        setIsLoading(false);
         return;
       } else {
         console.log('Nós temos o objeto ethereum', ethereum);
@@ -44,6 +50,8 @@ function App() {
     } catch (error) {
       console.log(error);
     }
+
+    setIsLoading(false);
   }
 
   async function checkNetwork() {
@@ -64,6 +72,7 @@ function App() {
 
   useEffect(() => {
     checkNetwork();
+    setIsLoading(true);
     checkIfWalletIsConnected();
   }, []);
 
@@ -100,6 +109,10 @@ function App() {
   }, [currentAccount]);
 
   function renderContent() {
+    if (isLoading) {
+      return <LoadingIndicator />;
+    }
+
     if (!currentAccount) {
       return (
         <div className="connect-wallet-container">
@@ -117,6 +130,13 @@ function App() {
       );
     } else if (currentAccount && !characterNFT) {
       return <SelectCharacter setCharacterNFT={setCharacterNFT} />;
+    } else if (currentAccount && characterNFT) {
+      return (
+        <Arena
+          characterNFT={characterNFT}
+          setCharacterNFT={setCharacterNFT}
+        />
+      );
     }
   }
 
@@ -130,9 +150,6 @@ function App() {
         return;
       }
 
-      /*
-       * Método  para pedir acesso a carteira.
-       */
       const accounts = await ethereum.request({
         method: 'eth_requestAccounts',
       });
