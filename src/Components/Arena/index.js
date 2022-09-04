@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
+import LoadingIndicator from '../LoadingIndicator';
+
 import {
   CONTRACT_ADDRESS,
   transformCharacterData,
@@ -14,6 +16,8 @@ function Arena({ characterNFT, setCharacterNFT }) {
 
   const [attackState, setAttackState] = useState('');
 
+  const [showToast, setShowToast] = useState(false);
+
   async function runAttackAction() {
     try {
       if (gameContract) {
@@ -23,6 +27,11 @@ function Arena({ characterNFT, setCharacterNFT }) {
         await attackTxn.wait();
         console.log('attackTxn:', attackTxn);
         setAttackState('hit');
+
+        setShowToast(true);
+        setTimeout(() => {
+          setShowToast(false);
+        }, 5000);
       }
     } catch (error) {
       console.error('Erro atacando o boss:', error);
@@ -89,7 +98,11 @@ function Arena({ characterNFT, setCharacterNFT }) {
 
   return (
     <div className="arena-container">
-      {/* Troque a sua boss UI por isso */}
+      {boss && characterNFT && (
+        <div id="toast" className={showToast ? 'show' : ''}>
+          <div id="desc">{`💥 ${boss.name} tomou ${characterNFT.attackDamage} de dano!`}</div>
+        </div>
+      )}
       {boss && (
         <div className="boss-container">
           <div className={`boss-content ${attackState}`}>
@@ -107,6 +120,14 @@ function Arena({ characterNFT, setCharacterNFT }) {
               {`💥 Atacar ${boss.name}`}
             </button>
           </div>
+
+          {/* Adicione isso embaixo do seu botão de ataque */}
+          {attackState === 'attacking' && (
+            <div className="loading-indicator">
+              <LoadingIndicator />
+              <p>Atacando ⚔️</p>
+            </div>
+          )}
         </div>
       )}
 
@@ -134,6 +155,10 @@ function Arena({ characterNFT, setCharacterNFT }) {
               </div>
             </div>
           </div>
+          {/* <div className="active-players">
+          <h2>Active Players</h2>
+          <div className="players-list">{renderActivePlayersList()}</div>
+        </div> */}
         </div>
       )}
     </div>

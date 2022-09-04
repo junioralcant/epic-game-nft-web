@@ -6,23 +6,30 @@ import {
   transformCharacterData,
 } from '../../constants';
 import myEpicGame from '../../utils/MyEpicGame.json';
+import LoadingIndicator from '../LoadingIndicator';
 
 const SelectCharacter = ({ setCharacterNFT }) => {
   const [characters, setCharacters] = useState([]);
   const [gameContract, setGameContract] = useState(null);
 
+  const [mintingCharacter, setMintingCharacter] = useState(false);
+
   async function mintCharacterNFTAction(characterId) {
     try {
       if (gameContract) {
+        setMintingCharacter(true);
         console.log('Mintando personagem...');
         const mintTxn = await gameContract.mintCharacterNFT(
           characterId
         );
         await mintTxn.wait();
         console.log('mintTxn:', mintTxn);
+
+        setMintingCharacter(false);
       }
     } catch (error) {
       console.warn('MintCharacterAction Error:', error);
+      setMintingCharacter(false);
     }
   }
 
@@ -115,6 +122,19 @@ const SelectCharacter = ({ setCharacterNFT }) => {
               >{`Mintar ${character.name}`}</button>
             </div>
           ))}
+        </div>
+      )}
+
+      {mintingCharacter && (
+        <div className="loading">
+          <div className="indicator">
+            <LoadingIndicator />
+            <p>Mintando personagem...</p>
+          </div>
+          <img
+            src="http://pa1.narvii.com/6623/1d810c548fc9695d096d54372b625d207373130a_00.gif"
+            alt="Indicador de Mintagem"
+          />
         </div>
       )}
     </div>
